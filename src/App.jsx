@@ -1,12 +1,25 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Employee from './pages/Employee';
 import SafetyOfficer from './pages/SafetyOfficer';
 import Supervisor from './pages/Supervisor';
-
+import SafetyBoard from './SafetyBoard'
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './Login'
 import TaskBoard from './TaskBoard'
+
+const rolePages = {
+  employee: { path: '/', label: 'Employee', Component: Employee },
+  worker: { path: '/', label: 'Employee', Component: Employee },
+  safety_officer: { path: '/SafetyOfficer', label: 'Safety Officer', Component: SafetyOfficer },
+  safetyofficer: { path: '/SafetyOfficer', label: 'Safety Officer', Component: SafetyOfficer },
+  supervisor: { path: '/Supervisor', label: 'Supervisor', Component: Supervisor },
+}
+
+function normalizeRole(role) {
+  return role?.trim().toLowerCase().replace(/[\s-]+/g, '_')
+}
+
 function App() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -53,6 +66,8 @@ function App() {
 
   // Not logged in -> show Login screen
   if (!session) return <Login />
+  const rolePage = rolePages[normalizeRole(profile?.role)]
+
   return (
     <>
     <div>
@@ -69,19 +84,27 @@ function App() {
     <BrowserRouter>
       {/* Nav Bar */}
       <nav style={{ display: 'flex', gap: '1rem', padding: '1rem', borderBottom: '1px solid #ccc', backgroundColor: "hsl(192, 75%, 37%)" }}>
-        <Link to="/">Employee</Link>
-        <Link to="/SafetyOfficer">Safety Officer</Link>
-        <Link to="/Supervisor">Supervisor</Link>
+        {rolePage && <Link to={rolePage.path}>{rolePage.label}</Link>}
       </nav>
 
       {/* Dynamic Page Content */}
       <main style={{ padding: '1rem' }}>
-        <Routes>
-          <Route path="/" element={<Employee />} />
-          <Route path="/SafetyOfficer" element={<SafetyOfficer />} />
-          <Route path="/Supervisor" element={<Supervisor />} />
-          <Route path="*" element={<h1>404 - Page Not Found</h1>} />
-        </Routes>
+        {rolePage ? (
+          <Routes>
+            <Route
+              path={rolePage.path}
+              element={<rolePage.Component />}
+            />
+            <Route
+              path="*"
+              element={<Navigate to={rolePage.path} replace />}
+            />
+          </Routes>
+        ) : (
+          <p>Your account does not have a supported role. Please contact an administrator.</p>
+        )}
+        <SafetyBoard profile={profile} />
+  <hr />
       </main>
     </BrowserRouter>
     </>
