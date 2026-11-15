@@ -6,7 +6,6 @@ import SafetyBoard from './SafetyBoard'
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './Login'
-import TaskBoard from './TaskBoard'
 
 const rolePages = {
   employee: { path: '/', label: 'Employee', Component: Employee },
@@ -24,6 +23,17 @@ function App() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  async function fetchProfile(userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('full_name, role')
+      .eq('id', userId)
+      .single()
+
+    if (!error) setProfile(data)
+    setLoading(false)
+  }
 
   useEffect(() => {
     // Check for an existing session
@@ -47,17 +57,6 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('full_name, role')
-      .eq('id', userId)
-      .single()
-
-    if (!error) setProfile(data)
-    setLoading(false)
-  }
-
   async function handleLogout() {
     await supabase.auth.signOut()
   }
@@ -77,9 +76,6 @@ function App() {
         </span>
         <button onClick={handleLogout}>Log Out</button>
       </header>
-
-      {/* Pass profile down so TaskBoard knows whether to show the "Assign Task" form */}
-      <TaskBoard profile={profile} />
     </div>
     <BrowserRouter>
       {/* Nav Bar */}

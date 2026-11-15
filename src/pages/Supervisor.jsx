@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import EquipmentSafety from './EquipmentSafety'
+import TaskBoard from '../TaskBoard'
 
 // If any of these tables have different names in Supabase, change them here.
 const CHECKINS_TABLE = 'check_ins'
@@ -9,7 +11,7 @@ const CERTS_TABLE = 'equipment_certifications'
 const box = { display: 'grid', gap: '0.5rem', maxWidth: 400, margin: '0 auto 1rem' }
 
 // FR-8: assign a task to a worker (same logic as your TaskBoard)
-function AssignTask() {
+function AssignTask({ onAssigned }) {
   const [workers, setWorkers] = useState([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -42,6 +44,7 @@ function AssignTask() {
       setTitle('')
       setDescription('')
       setWorkerId('')
+      onAssigned()
     }
   }
 
@@ -215,13 +218,17 @@ function Certifications() {
 }
 
 export default function Supervisor() {
+  const [taskRefreshKey, setTaskRefreshKey] = useState(0)
+
   return (
     <div>
       <h1>Supervisor Dashboard</h1>
-      <AssignTask />
+      <AssignTask onAssigned={() => setTaskRefreshKey((key) => key + 1)} />
+      <TaskBoard key={taskRefreshKey} canDelete />
       <CheckLogs />
       <ReportForm />
       <Certifications />
+      <EquipmentSafety />
     </div>
   )
 }
